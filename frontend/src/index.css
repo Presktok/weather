@@ -1,0 +1,21 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #0a1628;
+  color: #e2e8f0;
+}
+
+.leaflet-container {
+  background: #0f2744;
+  font-family: inherit;
+}
+
+.risk-marker {
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
