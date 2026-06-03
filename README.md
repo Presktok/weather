@@ -63,6 +63,28 @@ Open http://localhost:5173
 
 ---
 
+## Deploy (GitHub Pages + API)
+
+**Live site (after workflow runs):** https://presktok.github.io/weather/
+
+### 1. Frontend — GitHub Pages (automatic)
+
+Pushes to `main` run [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) and publish the Vite build.
+
+**One-time repo setup:** In GitHub → **Settings** → **Pages** → **Build and deployment** → Source: **GitHub Actions**.
+
+### 2. Backend — Render (free)
+
+The API cannot run on GitHub Pages. Deploy it on Render:
+
+1. Open [Deploy to Render](https://render.com/deploy?repo=https://github.com/Presktok/weather) (uses [`render.yaml`](render.yaml)).
+2. Wait until the service is live (default URL: `https://weather-api.onrender.com`).
+3. Optional: override the API URL in GitHub → **Settings** → **Secrets and variables** → **Actions** → **Variables** → `VITE_API_BASE` = `https://your-service.onrender.com/api`, then re-run the Pages workflow.
+
+CORS is already enabled on the API for browser calls from GitHub Pages.
+
+---
+
 ## API (by week)
 
 | Week | Endpoint | Purpose |

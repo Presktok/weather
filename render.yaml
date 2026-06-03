@@ -1,0 +1,14 @@
+# Deploy API: https://render.com/deploy?repo=https://github.com/Presktok/weather
+# After deploy, set GitHub repo variable VITE_API_BASE to https://<your-service>.onrender.com/api
+services:
+  - type: web
+    name: weather-api
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.0"
