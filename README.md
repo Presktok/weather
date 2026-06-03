@@ -65,13 +65,21 @@ Open http://localhost:5173
 
 ## Deploy (GitHub Pages + API)
 
-**Live site (after workflow runs):** https://presktok.github.io/weather/
+**Live site URL (use this exact path):** https://presktok.github.io/weather/
+
+> Do not open `https://presktok.github.io/` — that is your user site (portfolio). This app is a **project page** under `/weather/`.
 
 ### 1. Frontend — GitHub Pages (automatic)
 
-Pushes to `main` run [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) and publish the Vite build.
+Pushes to `main` run [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) and push the build to the `gh-pages` branch.
 
-**One-time repo setup:** In GitHub → **Settings** → **Pages** → **Build and deployment** → Source: **GitHub Actions**.
+**One-time repo setup (required):**
+
+1. GitHub → **Presktok/weather** → **Settings** → **Pages**
+2. **Build and deployment** → Source: **Deploy from a branch**
+3. Branch: **gh-pages** · Folder: **/ (root)** → **Save**
+4. **Actions** tab → wait for **Deploy to GitHub Pages** to finish (green check)
+5. Open https://presktok.github.io/weather/ (may take 1–2 minutes after first deploy)
 
 ### 2. Backend — Render (free)
 
