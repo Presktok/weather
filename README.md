@@ -63,33 +63,26 @@ Open http://localhost:5173
 
 ---
 
-## Deploy (GitHub Pages + API)
+## Deploy on GitHub Pages
 
-**Live site URL (use this exact path):** https://presktok.github.io/weather/
+**Your app URL:** https://presktok.github.io/weather/
 
-> Do not open `https://presktok.github.io/` — that is your user site (portfolio). This app is a **project page** under `/weather/`.
+(Not `https://presktok.github.io/` — that is your personal portfolio site.)
 
-### 1. Frontend — GitHub Pages (automatic)
+### One-time setup (2 clicks)
 
-Pushes to `main` run [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) and push the build to the `gh-pages` branch.
+1. Open **https://github.com/Presktok/weather/settings/pages**
+2. Set **Build and deployment**:
+   - **Source:** Deploy from a branch
+   - **Branch:** `main`
+   - **Folder:** `/docs`
+3. Click **Save**, wait ~1 minute, then open **https://presktok.github.io/weather/**
 
-**One-time repo setup (required):**
+The built site is already in the [`docs/`](docs/) folder on `main`. Future pushes to `frontend/` auto-update `docs/` via GitHub Actions.
 
-1. GitHub → **Presktok/weather** → **Settings** → **Pages**
-2. **Build and deployment** → Source: **Deploy from a branch**
-3. Branch: **gh-pages** · Folder: **/ (root)** → **Save**
-4. **Actions** tab → wait for **Deploy to GitHub Pages** to finish (green check)
-5. Open https://presktok.github.io/weather/ (may take 1–2 minutes after first deploy)
+### API for live analysis
 
-### 2. Backend — Render (free)
-
-The API cannot run on GitHub Pages. Deploy it on Render:
-
-1. Open [Deploy to Render](https://render.com/deploy?repo=https://github.com/Presktok/weather) (uses [`render.yaml`](render.yaml)).
-2. Wait until the service is live (default URL: `https://weather-api.onrender.com`).
-3. Optional: override the API URL in GitHub → **Settings** → **Secrets and variables** → **Actions** → **Variables** → `VITE_API_BASE` = `https://your-service.onrender.com/api`, then re-run the Pages workflow.
-
-CORS is already enabled on the API for browser calls from GitHub Pages.
+GitHub Pages hosts static files only. For **Run Analysis** on the live site, deploy the Python API once on Render (free): [Deploy to Render](https://render.com/deploy?repo=https://github.com/Presktok/weather). Default API URL: `https://weather-api.onrender.com/api`.
 
 ---
 
