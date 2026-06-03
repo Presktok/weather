@@ -63,26 +63,34 @@ Open http://localhost:5173
 
 ---
 
-## Deploy on GitHub Pages
+## Deploy on Vercel (recommended)
 
-**Your app URL:** https://presktok.github.io/weather/
+Full stack: React frontend + FastAPI API on one Vercel project.
 
-(Not `https://presktok.github.io/` — that is your personal portfolio site.)
+### Deploy from GitHub
 
-### One-time setup (2 clicks)
+1. Go to [vercel.com/new](https://vercel.com/new) and sign in with GitHub.
+2. Import **Presktok/weather**.
+3. Leave defaults (Vercel reads [`vercel.json`](vercel.json) at the repo root):
+   - **Root Directory:** `.` (repository root)
+   - **Build Command:** `npm run build --prefix frontend`
+   - **Output Directory:** `frontend/dist`
+4. Click **Deploy**.
 
-1. Open **https://github.com/Presktok/weather/settings/pages**
-2. Set **Build and deployment**:
-   - **Source:** Deploy from a branch
-   - **Branch:** `main`
-   - **Folder:** `/docs`
-3. Click **Save**, wait ~1 minute, then open **https://presktok.github.io/weather/**
+Your live URL will be like `https://weather-xxxx.vercel.app`. The app calls `/api` on the same domain (no extra API host).
 
-The built site is already in the [`docs/`](docs/) folder on `main`. Future pushes to `frontend/` auto-update `docs/` via GitHub Actions.
+### Optional: Vercel CLI
 
-### API for live analysis
+```bash
+npm i -g vercel
+cd weather
+vercel
+vercel --prod
+```
 
-GitHub Pages hosts static files only. For **Run Analysis** on the live site, deploy the Python API once on Render (free): [Deploy to Render](https://render.com/deploy?repo=https://github.com/Presktok/weather). Default API URL: `https://weather-api.onrender.com/api`.
+### GitHub Pages (alternative)
+
+Static-only hosting: **Settings → Pages → branch `main` → folder `/docs`** → https://presktok.github.io/weather/ (API must be hosted separately, e.g. Render).
 
 ---
 

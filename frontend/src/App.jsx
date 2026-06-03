@@ -136,12 +136,6 @@ export default function App() {
         {error && (
           <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 mb-4 text-red-400 text-sm">
             {error}
-            {import.meta.env.PROD && !import.meta.env.VITE_API_BASE && (
-              <span className="block mt-1 text-slate-400">
-                On GitHub Pages, set repository variable <code className="text-amber-200">VITE_API_BASE</code> to your
-                Render API URL (see README Deploy).
-              </span>
-            )}
           </div>
         )}
 
