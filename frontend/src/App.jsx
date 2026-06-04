@@ -20,6 +20,14 @@ export default function App() {
   })
 
   const runAnalysis = useCallback(async () => {
+    if (params.laycan_start < params.departure_time) {
+      setError('Laycan start must be on or after departure date')
+      return
+    }
+    if (params.laycan_end < params.laycan_start) {
+      setError('Laycan end must be on or after laycan start')
+      return
+    }
     setLoading(true)
     setError(null)
     const controller = new AbortController()
@@ -31,7 +39,14 @@ export default function App() {
         body: JSON.stringify(params),
         signal: controller.signal,
       })
-      if (!res.ok) throw new Error(`API error: ${res.status}`)
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        const detail = body.detail
+        const msg = Array.isArray(detail)
+          ? detail.map((d) => d.msg || d).join('; ')
+          : detail || `API error: ${res.status}`
+        throw new Error(msg)
+      }
       const result = await res.json()
       setData(result)
       setActiveRoute(result.recommendation.route_id.includes('alt') ? 'b' : 'a')
@@ -77,15 +92,26 @@ export default function App() {
               </select>
             </div>
             <div>
+              <label className="text-xs text-slate-400 block mb-1">Departure</label>
+              <input
+                type="date"
+                value={params.departure_time}
+                onChange={(e) => setParams({ ...params, departure_time: e.target.value })}
+                className="bg-ocean-900 border border-slate-600 rounded px-3 py-2 text-sm text-white"
+              />
+            </div>
+            <div>
               <label className="text-xs text-slate-400 block mb-1">Commanded Speed (kn)</label>
               <input
                 type="number"
                 value={params.commanded_speed}
                 onChange={(e) => setParams({ ...params, commanded_speed: +e.target.value })}
                 className="bg-ocean-900 border border-slate-600 rounded px-3 py-2 text-sm text-white w-24"
-                min={1}
-                max={25}
+                min={6}
+                max={18}
+                step={0.5}
               />
+              <p className="text-[10px] text-slate-500 mt-0.5">6–18 kn (demo range)</p>
             </div>
             <div>
               <label className="text-xs text-slate-400 block mb-1">Laycan Start</label>

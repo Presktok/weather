@@ -17,6 +17,8 @@ elif wave > 2 or wind > 15 kn: MEDIUM
 else:                         LOW
 ```
 
+**Inputs:** commanded speed **6–18 kn** · laycan start ≥ departure · monsoon corridor severity scales with **departure month** (Jun–Sep peak).
+
 **Map colors:** Green = Low · Yellow = Medium · Red = High
 
 ---

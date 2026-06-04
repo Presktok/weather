@@ -19,7 +19,13 @@ _ATLANTIC_TO_GIBRALTAR = [
     {"name": "WP5 - Strait of Gibraltar", "lat": 36.0, "lon": -5.5},
 ]
 
-# Indian Ocean: extra points keep polylines offshore (Leaflet draws great-circle segments)
+# Extra sea points per leg — Leaflet draws straight segments between waypoints
+_MALACCA_TO_SINGAPORE = [
+    {"name": "WP15 - North Malacca", "lat": 3.5, "lon": 100.0},
+    {"name": "WP16 - Malacca Strait", "lat": 2.3, "lon": 101.2},
+    {"name": "WP17 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+]
+
 _INDIAN_OCEAN_MAIN = [
     {"name": "WP9 - Bab el-Mandeb", "lat": 12.5, "lon": 43.5},
     {"name": "WP10 - Arabian Sea", "lat": 15.0, "lon": 62.0},
@@ -28,8 +34,7 @@ _INDIAN_OCEAN_MAIN = [
     {"name": "WP12 - Bay of Bengal", "lat": 10.0, "lon": 82.0},
     {"name": "WP13 - Monsoon Zone", "lat": 8.0, "lon": 88.0},
     {"name": "WP14 - Andaman Sea", "lat": 7.0, "lon": 94.0},
-    {"name": "WP15 - Malacca Approach", "lat": 4.0, "lon": 99.0},
-    {"name": "WP16 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+    *_MALACCA_TO_SINGAPORE,
 ]
 
 _INDIAN_OCEAN_AVOIDANCE = [
@@ -41,7 +46,7 @@ _INDIAN_OCEAN_AVOIDANCE = [
     {"name": "WP13 - Equatorial Indian Ocean", "lat": 2.5, "lon": 86.0},
     {"name": "WP14 - South of Sumatra", "lat": 0.0, "lon": 92.5},
     {"name": "WP15 - Malacca South", "lat": 1.5, "lon": 99.0},
-    {"name": "WP16 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+    *_MALACCA_TO_SINGAPORE[1:],  # strait + Singapore (skip duplicate north malacca)
 ]
 
 ROTTERDAM_SINGAPORE = {
@@ -56,7 +61,6 @@ ROTTERDAM_SINGAPORE = {
     ],
 }
 
-# Alternative route: wide southern arc (India → Sri Lanka → Sumatra offshore)
 ROTTERDAM_SINGAPORE_ALT = {
     "id": "rotterdam-singapore-alt",
     "name": "Rotterdam → Singapore (Weather Avoidance)",

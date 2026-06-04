@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from data.routes import ROUTES
+from services.validation import validate_voyage_inputs
 from services.voyage import analyze_voyage, compare_routes, get_route_geometry
 
 app = FastAPI(
@@ -26,15 +27,15 @@ router = APIRouter()
 
 class VoyageRequest(BaseModel):
     route_id: str = "rotterdam-singapore"
-    commanded_speed: float = Field(12.0, ge=1, le=25)
+    commanded_speed: float = Field(12.0, ge=6, le=18, description="Operational SOG range 6–18 kn")
     laycan_start: str = "2026-09-19"
     laycan_end: str = "2026-09-20"
     bunker_price: float = Field(600.0, ge=0)
-    departure_time: str | None = None
+    departure_time: str = "2026-08-22"
 
 
 class CompareRequest(BaseModel):
-    commanded_speed: float = Field(12.0, ge=1, le=25)
+    commanded_speed: float = Field(12.0, ge=6, le=18, description="Operational SOG range 6–18 kn")
     laycan_start: str = "2026-09-19"
     laycan_end: str = "2026-09-20"
     bunker_price: float = Field(600.0, ge=0)
@@ -70,7 +71,13 @@ def list_routes():
 
 @router.post("/voyage/analyze")
 async def voyage_analyze(req: VoyageRequest):
-    return await analyze_voyage(
+    try:
+        warnings = validate_voyage_inputs(
+            req.departure_time, req.laycan_start, req.laycan_end
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    result = await analyze_voyage(
         route_id=req.route_id,
         commanded_speed=req.commanded_speed,
         laycan_start=req.laycan_start,
@@ -78,17 +85,27 @@ async def voyage_analyze(req: VoyageRequest):
         bunker_price=req.bunker_price,
         departure_time=req.departure_time,
     )
+    result["input_warnings"] = warnings
+    return result
 
 
 @router.post("/voyage/compare")
 async def voyage_compare(req: CompareRequest):
-    return await compare_routes(
+    try:
+        warnings = validate_voyage_inputs(
+            req.departure_time, req.laycan_start, req.laycan_end
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    result = await compare_routes(
         laycan_start=req.laycan_start,
         laycan_end=req.laycan_end,
         commanded_speed=req.commanded_speed,
         bunker_price=req.bunker_price,
         departure_time=req.departure_time,
     )
+    result["input_warnings"] = warnings
+    return result
 
 
 @router.get("/demo/rotterdam-singapore")

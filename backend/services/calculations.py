@@ -680,6 +680,18 @@ def build_recommendation_detail(
         "laycan": laycan_metric(loser),
     }
 
+    safety_rationale = None
+    if w_high < l_high or w_risk < l_risk:
+        safety_rationale = (
+            "Safety is prioritized over minimum cost in this recommendation "
+            "(fewer high-risk legs and lower weather-risk index outweigh additional fuel spend)."
+        )
+    if cost_diff > 0 and (w_risk < l_risk or w_high < l_high):
+        safety_rationale = (
+            "Recommended because weather risk reduction is weighted above fuel cost "
+            f"(+${cost_diff:,.0f} accepted for materially safer operations)."
+        )
+
     if charter_warning:
         summary = (
             f"{winner_label} recommended for voyage safety (best option, but neither route "
@@ -687,8 +699,8 @@ def build_recommendation_detail(
         )
     elif cost_diff > 0 and (w_risk < l_risk or w_high < l_high):
         summary = (
-            f"{winner_label} recommended for voyage safety — avoids high-risk weather"
-            + (f" at +${cost_diff:,.0f} fuel cost" if cost_diff > 0 else "")
+            f"{winner_label} recommended — safety prioritized over cost"
+            + (f" (+${cost_diff:,.0f} fuel vs alternative)" if cost_diff > 0 else "")
         )
     else:
         summary = f"{winner_label} is recommended based on weighted voyage score"
@@ -716,6 +728,7 @@ def build_recommendation_detail(
             "tradeoffs": recommendation_tradeoffs,
         },
         "primary_driver": "operational_safety",
+        "safety_rationale": safety_rationale,
         "score_breakdown": build_score_breakdown(
             winner_metrics, loser_metrics, charter_warning=charter_warning
         ),

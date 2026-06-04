@@ -31,7 +31,8 @@ from services.calculations import (
     score_component_points,
     weighted_route_score,
 )
-from services.weather import fetch_weather_for_waypoints
+from services.validation import validate_voyage_inputs
+from services.weather import fetch_weather_for_waypoints, monsoon_season_label
 
 
 def _build_route_points(route: dict) -> list[dict]:
@@ -62,7 +63,7 @@ async def analyze_voyage(
 ) -> dict:
     route = ROUTES.get(route_id, ROTTERDAM_SINGAPORE)
     points = _build_route_points(route)
-    weather_data = await fetch_weather_for_waypoints(route["waypoints"])
+    weather_data = await fetch_weather_for_waypoints(route["waypoints"], departure_time)
 
     legs = []
     total_distance = 0.0
@@ -170,6 +171,8 @@ async def compare_routes(
     bunker_price: float = 600.0,
     departure_time: str = "2026-08-22",
 ) -> dict:
+    validate_voyage_inputs(departure_time, laycan_start, laycan_end)
+
     route_a, route_b = await asyncio.gather(
         analyze_voyage(
             "rotterdam-singapore", commanded_speed, laycan_start, laycan_end, bunker_price, departure_time
@@ -248,7 +251,10 @@ async def compare_routes(
         "route_a": {"label": "Route A — Main", "analysis": route_a},
         "route_b": {"label": "Route B — Detour", "analysis": route_b},
         "weather_impact": build_weather_impact_summary(route_a),
-        "weather_sources": summarize_weather_sources(route_a, route_b),
+        "weather_sources": {
+            **summarize_weather_sources(route_a, route_b),
+            "monsoon_season": monsoon_season_label(departure_time),
+        },
         "high_risk_zones": route_a["high_risk_zones"],
         "distance": {
             "route_a_nm": dist_a,
@@ -307,6 +313,10 @@ async def compare_routes(
         },
         "charter_warning": charter_warning,
         "route_scores": {
+            "score_interpretation": (
+                "Relative comparison between Route A and Route B only — higher score wins "
+                "this pairing; not an absolute grade of voyage quality."
+            ),
             "route_a": score_a_pct,
             "route_b": score_b_pct,
             "route_a_pct": score_a_pct,

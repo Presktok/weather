@@ -197,6 +197,11 @@ export default function Dashboard({ data, loading }) {
             {recommendation.summary && (
               <p className="text-sm text-slate-300">{recommendation.summary}</p>
             )}
+            {recommendation.safety_rationale && (
+              <p className="text-sm text-green-200/95 mt-2 p-2.5 rounded-lg bg-green-500/10 border border-green-500/25">
+                {recommendation.safety_rationale}
+              </p>
+            )}
             {recommendation.timing_note && (
               <p className="text-sm text-amber-200/90 mt-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
                 {recommendation.timing_note}
@@ -274,6 +279,9 @@ export default function Dashboard({ data, loading }) {
             <>
               <MetricRow label="Primary" value={weatherSources.primary} />
               {weatherSources.fallback && <MetricRow label="Fallback" value={weatherSources.fallback} />}
+              {weatherSources.monsoon_season && (
+                <MetricRow label="Monsoon season (departure)" value={weatherSources.monsoon_season} />
+              )}
               <p className="text-[10px] text-slate-500 mt-2">
                 {weatherSources.legs_open_meteo} legs Open-Meteo · {weatherSources.legs_demo} legs demo model
               </p>
@@ -327,7 +335,9 @@ export default function Dashboard({ data, loading }) {
 
       {section('route-score', {
         title: 'Route Score',
-        subtitle: 'Normalized 0–100 scale (higher = better)',
+        subtitle:
+          scores.score_interpretation ||
+          'Relative comparison only — higher score wins between A and B on this voyage',
         children: (
           <>
             {scores.laycan_penalty_note && (
