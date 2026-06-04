@@ -1,13 +1,15 @@
 """Predefined voyage routes and waypoints."""
 
-# Mediterranean → Suez → Red Sea (offshore segments for map display)
-_MEDITERRANEAN_SUEZ_RED_SEA = [
-    {"name": "WP6 - Mediterranean", "lat": 35.0, "lon": 15.0},
-    {"name": "WP6A - Crete Passage", "lat": 35.0, "lon": 24.0},
-    {"name": "WP6B - Eastern Mediterranean", "lat": 33.5, "lon": 29.0},
-    {"name": "WP7 - Port Said", "lat": 31.3, "lon": 32.3},
-    {"name": "WP7A - Gulf of Suez", "lat": 28.5, "lon": 33.0},
-    {"name": "WP8 - Red Sea North", "lat": 24.0, "lon": 35.5},
+# Western Med → Suez Canal → Red Sea (dense points for map / leg geometry)
+_MEDITERRANEAN_TO_RED_SEA = [
+    {"name": "WP5A - Western Mediterranean", "lat": 37.0, "lon": 5.0},
+    {"name": "WP5B - Central Mediterranean", "lat": 35.5, "lon": 15.0},
+    {"name": "WP5C - Eastern Mediterranean", "lat": 33.5, "lon": 28.0},
+    {"name": "WP7 - Port Said", "lat": 31.26, "lon": 32.30},
+    {"name": "WP7A - Suez Canal North", "lat": 30.70, "lon": 32.35},
+    {"name": "WP7B - Great Bitter Lake", "lat": 30.30, "lon": 32.40},
+    {"name": "WP7C - Gulf of Suez", "lat": 29.60, "lon": 32.55},
+    {"name": "WP8 - Red Sea North", "lat": 27.50, "lon": 34.80},
 ]
 
 _ATLANTIC_TO_GIBRALTAR = [
@@ -61,7 +63,7 @@ ROTTERDAM_SINGAPORE = {
     "destination": {"name": "Singapore", "lat": 1.3521, "lon": 103.8198},
     "waypoints": [
         *_ATLANTIC_TO_GIBRALTAR,
-        *_MEDITERRANEAN_SUEZ_RED_SEA,
+        *_MEDITERRANEAN_TO_RED_SEA,
         *_INDIAN_OCEAN_MAIN,
     ],
 }
@@ -73,7 +75,7 @@ ROTTERDAM_SINGAPORE_ALT = {
     "destination": {"name": "Singapore", "lat": 1.3521, "lon": 103.8198},
     "waypoints": [
         *_ATLANTIC_TO_GIBRALTAR,
-        *_MEDITERRANEAN_SUEZ_RED_SEA,
+        *_MEDITERRANEAN_TO_RED_SEA,
         *_INDIAN_OCEAN_AVOIDANCE,
     ],
 }
