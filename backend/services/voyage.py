@@ -1,5 +1,8 @@
 import asyncio
+import logging
 from datetime import datetime, timedelta
+
+logger = logging.getLogger(__name__)
 
 from data.routes import ROUTES, ROTTERDAM_SINGAPORE
 from services.calculations import (
@@ -14,6 +17,7 @@ from services.calculations import (
     build_weather_impact_summary,
     is_laycan_badly_missed,
     route_weather_severity,
+    summarize_leg_weather_delays,
     summarize_weather_sources,
     calculate_speed_loss,
     calculate_sog,
@@ -111,9 +115,10 @@ async def analyze_voyage(
             "fuel_cost_usd": round(leg_fuel * bunker_price, 0),
         })
 
-    delay_hours = max(total_hours - ideal_hours, 0)
+    delay_breakdown = summarize_leg_weather_delays(legs, commanded_speed)
     extra_fuel = max(total_fuel - ideal_fuel, 0)
     laycan = assess_laycan_risk(total_hours, laycan_start, laycan_end, departure_time)
+    severity = route_weather_severity(legs)
 
     dep = datetime.strptime(departure_time, "%Y-%m-%d")
     waypoint_etas = []
@@ -138,7 +143,9 @@ async def analyze_voyage(
         "extra_fuel_cost_usd": round(extra_fuel * bunker_price, 0),
         "total_fuel_cost_usd": round(total_fuel * bunker_price, 0),
         "bunker_price_usd_per_mt": bunker_price,
-        "weather_delay_hours": round(delay_hours, 1),
+        "weather_delay_hours": delay_breakdown["weather_delay_hours"],
+        "high_risk_weather_delay_hours": delay_breakdown["high_risk_weather_delay_hours"],
+        "severe_weather_delay_hours": delay_breakdown["severe_weather_delay_hours"],
         "destination_eta": waypoint_etas[-1]["eta"] if waypoint_etas else None,
     }
 
@@ -148,7 +155,8 @@ async def analyze_voyage(
         "summary": summary,
         "waypoint_etas": waypoint_etas,
         "laycan": laycan,
-        "weather_severity": route_weather_severity(legs),
+        "weather_severity": severity["average"],
+        "weather_severity_peak": severity["peak"],
         "business_impact": build_business_impact({"summary": summary, "laycan": laycan}),
         "high_risk_zones": build_high_risk_zones(legs, commanded_speed),
     }
@@ -169,6 +177,14 @@ async def compare_routes(
         analyze_voyage(
             "rotterdam-singapore-alt", commanded_speed, laycan_start, laycan_end, bunker_price, departure_time
         ),
+    )
+
+    logger.info(
+        "weather_delay route_a total=%s high_risk=%s | route_b total=%s high_risk=%s",
+        route_a["summary"]["weather_delay_hours"],
+        route_a["summary"].get("high_risk_weather_delay_hours"),
+        route_b["summary"]["weather_delay_hours"],
+        route_b["summary"].get("high_risk_weather_delay_hours"),
     )
 
     metrics_a = {
@@ -247,9 +263,14 @@ async def compare_routes(
                     "route_b": f"{dist_b:,.0f} nm",
                 },
                 {
-                    "metric": "Weather severity",
-                    "route_a": f"{route_a['weather_severity']}/100",
-                    "route_b": f"{route_b['weather_severity']}/100",
+                    "metric": "Weather severity (avg / peak)",
+                    "route_a": f"{route_a['weather_severity']}/{route_a['weather_severity_peak']}",
+                    "route_b": f"{route_b['weather_severity']}/{route_b['weather_severity_peak']}",
+                },
+                {
+                    "metric": "High-risk weather delay (hrs)",
+                    "route_a": route_a["summary"].get("high_risk_weather_delay_hours", 0),
+                    "route_b": route_b["summary"].get("high_risk_weather_delay_hours", 0),
                 },
                 {
                     "metric": "Voyage time",

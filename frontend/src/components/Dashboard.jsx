@@ -250,7 +250,7 @@ export default function Dashboard({ data, loading }) {
                 ))}
               </ul>
             )}
-            {recommendation.tradeoffs?.length > 0 && (
+            {!recCard?.tradeoffs?.length && recommendation.tradeoffs?.length > 0 && (
               <div className="mt-3 pt-3 border-t border-green-500/20">
                 <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Tradeoff</p>
                 <ul className="space-y-1">
@@ -432,7 +432,14 @@ export default function Dashboard({ data, loading }) {
           children: (
             <>
               <MetricRow label="Average speed loss" value={`${weatherImpact.average_speed_loss_kn} kn`} />
-              <MetricRow label="Weather delay" value={`${weatherImpact.total_weather_delay_hours} hrs`} />
+              <MetricRow label="Weather delay (total)" value={`${weatherImpact.total_weather_delay_hours} hrs`} />
+              {weatherImpact.high_risk_weather_delay_hours != null && (
+                <MetricRow
+                  label="Delay on HIGH-risk legs"
+                  value={`${weatherImpact.high_risk_weather_delay_hours} hrs`}
+                  highlight={weatherImpact.high_risk_weather_delay_hours > 0}
+                />
+              )}
               <MetricRow
                 label="High-risk legs"
                 value={`${weatherImpact.high_risk_leg_count}`}

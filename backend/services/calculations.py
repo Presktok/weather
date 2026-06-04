@@ -47,10 +47,38 @@ def leg_weather_severity(weather: dict) -> int:
     return min(100, round(100 * raw))
 
 
-def route_weather_severity(legs: list) -> int:
+def route_weather_severity(legs: list) -> dict:
+    """Average reflects voyage-wide conditions; peak is worst single leg."""
     if not legs:
-        return 0
-    return max(leg_weather_severity(leg["weather"]) for leg in legs)
+        return {"average": 0, "peak": 0}
+    severities = [leg_weather_severity(leg["weather"]) for leg in legs]
+    return {
+        "average": round(sum(severities) / len(severities)),
+        "peak": max(severities),
+    }
+
+
+def leg_weather_delay_hours(leg: dict, commanded_speed: float) -> float:
+    ideal = leg["distance_nm"] / commanded_speed if commanded_speed else 0
+    return max(leg["leg_hours"] - ideal, 0)
+
+
+def summarize_leg_weather_delays(legs: list, commanded_speed: float) -> dict:
+    total = 0.0
+    high_risk = 0.0
+    severe = 0.0
+    for leg in legs:
+        d = leg_weather_delay_hours(leg, commanded_speed)
+        total += d
+        if leg["risk"] == "HIGH":
+            high_risk += d
+        if leg["risk"] in ("HIGH", "MEDIUM"):
+            severe += d
+    return {
+        "weather_delay_hours": round(total, 1),
+        "high_risk_weather_delay_hours": round(high_risk, 1),
+        "severe_weather_delay_hours": round(severe, 1),
+    }
 
 
 def summarize_weather_sources(*analyses: dict) -> dict:
@@ -400,7 +428,10 @@ def build_weather_impact_summary(analysis: dict) -> dict:
         "route_label": analysis["route"]["name"],
         "average_speed_loss_kn": round(commanded - summary["average_sog_kn"], 2),
         "total_weather_delay_hours": delay_hours,
+        "high_risk_weather_delay_hours": summary.get("high_risk_weather_delay_hours", 0),
         "high_risk_leg_count": high_risk_legs,
+        "weather_severity_average": analysis.get("weather_severity", 0),
+        "weather_severity_peak": analysis.get("weather_severity_peak", 0),
         "max_wave_height_m": round(max_wave, 2),
         "weather_fuel_penalty_mt": fuel_penalty,
         "weather_fuel_cost_penalty_usd": fuel_cost_penalty,
@@ -553,7 +584,12 @@ def build_recommendation_detail(
     l_risk = risk_metric(loser)
     w_high = _high_risk_leg_count(winner)
     l_high = _high_risk_leg_count(loser)
-    delay_save = round(l_sum["weather_delay_hours"] - w_sum["weather_delay_hours"], 1)
+    delay_save_total = round(l_sum["weather_delay_hours"] - w_sum["weather_delay_hours"], 1)
+    delay_save_high_risk = round(
+        l_sum.get("high_risk_weather_delay_hours", 0) - w_sum.get("high_risk_weather_delay_hours", 0),
+        1,
+    )
+    delay_save = delay_save_high_risk if delay_save_high_risk >= 0.5 else delay_save_total
     fuel_diff = round(w_sum["total_fuel_mt"] - l_sum["total_fuel_mt"], 0)
     cost_diff = round(w_sum["total_fuel_cost_usd"] - l_sum["total_fuel_cost_usd"], 0)
 
@@ -567,8 +603,12 @@ def build_recommendation_detail(
         recommendation_reasons.append("Avoids Bay of Bengal Monsoon Corridor")
     if l_high > w_high:
         recommendation_reasons.append(f"High-risk legs reduced from {l_high} to {w_high}")
-    if delay_save >= 0.1:
-        recommendation_reasons.append(f"Reduces weather delay by {delay_save} hrs")
+    if delay_save_high_risk >= 0.5:
+        recommendation_reasons.append(
+            f"Reduces high-risk weather delay by {delay_save_high_risk} hrs"
+        )
+    elif delay_save_total >= 0.5:
+        recommendation_reasons.append(f"Reduces total weather delay by {delay_save_total} hrs")
 
     recommendation_tradeoffs = []
     if fuel_diff > 0:
@@ -594,24 +634,30 @@ def build_recommendation_detail(
 
     voyage_days_diff = round(w_sum["total_voyage_days"] - l_sum["total_voyage_days"], 1)
     timing_note = None
-    if delay_save > 0 and voyage_days_diff > 0:
-        timing_note = (
-            f"{winner_label} experiences {delay_save} fewer weather-delay hours but travels "
-            f"a longer distance, resulting in a {voyage_days_diff} day longer overall voyage."
+    delay_for_timing = delay_save_high_risk if delay_save_high_risk >= 0.5 else delay_save_total
+    if delay_for_timing > 0 and voyage_days_diff > 0:
+        delay_label = (
+            "high-risk weather-delay"
+            if delay_save_high_risk >= 0.5
+            else "net weather-delay"
         )
-    elif delay_save >= 2:
-        secondary.append(f"Secondary benefit: {delay_save} hr less weather delay")
+        timing_note = (
+            f"{winner_label} saves {delay_for_timing} hr on {delay_label} legs but travels "
+            f"a longer distance (+{voyage_days_diff} days overall voyage)."
+        )
+    elif delay_save_high_risk >= 2:
+        secondary.append(f"High-risk weather delay reduced by {delay_save_high_risk} hr")
+    elif delay_save_total > 0 and delay_save_high_risk >= 0.5 and not timing_note:
+        secondary.append(
+            f"High-risk leg delay down {delay_save_high_risk} hr; total route delay differs by "
+            f"{delay_save_total} hr (detour distance adds baseline voyage time)"
+        )
     elif delay_save > 0 and not timing_note:
         secondary.append(f"Minor delay improvement: {delay_save} hr (not the main driver)")
 
     if w_sum["total_fuel_cost_usd"] < l_sum["total_fuel_cost_usd"]:
         savings = l_sum["total_fuel_cost_usd"] - w_sum["total_fuel_cost_usd"]
         benefits.append(f"Lower fuel cost (saves ${savings:,.0f})")
-
-    if fuel_diff > 0:
-        tradeoffs.append(f"+{fuel_diff:.0f} MT additional fuel")
-    if cost_diff > 0:
-        tradeoffs.append(f"+${cost_diff:,.0f} additional fuel cost")
 
     if cost_diff > 0:
         tradeoffs.append(
@@ -657,6 +703,14 @@ def build_recommendation_detail(
         "timing_note": timing_note,
         "charter_warning": charter_warning,
         "high_risk_legs": {"route_a": high_a, "route_b": high_b},
+        "delay_comparison": {
+            "total_hours_saved": delay_save_total,
+            "high_risk_hours_saved": delay_save_high_risk,
+            "winner_total_delay_hours": w_sum["weather_delay_hours"],
+            "loser_total_delay_hours": l_sum["weather_delay_hours"],
+            "winner_high_risk_delay_hours": w_sum.get("high_risk_weather_delay_hours", 0),
+            "loser_high_risk_delay_hours": l_sum.get("high_risk_weather_delay_hours", 0),
+        },
         "recommendation_card": {
             "reasons": recommendation_reasons,
             "tradeoffs": recommendation_tradeoffs,
