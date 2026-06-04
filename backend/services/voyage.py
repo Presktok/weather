@@ -200,6 +200,7 @@ async def compare_routes(
         "laycan": laycan_metric(route_b),
     }
 
+    # Lower weighted score = better route
     score_a_raw = weighted_route_score(**metrics_a, other=metrics_b)
     score_b_raw = weighted_route_score(**metrics_b, other=metrics_a)
     if score_b_raw < score_a_raw:

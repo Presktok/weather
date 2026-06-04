@@ -19,6 +19,31 @@ _ATLANTIC_TO_GIBRALTAR = [
     {"name": "WP5 - Strait of Gibraltar", "lat": 36.0, "lon": -5.5},
 ]
 
+# Indian Ocean: extra points keep polylines offshore (Leaflet draws great-circle segments)
+_INDIAN_OCEAN_MAIN = [
+    {"name": "WP9 - Bab el-Mandeb", "lat": 12.5, "lon": 43.5},
+    {"name": "WP10 - Arabian Sea", "lat": 15.0, "lon": 62.0},
+    {"name": "WP11 - Off India West", "lat": 11.0, "lon": 69.0},
+    {"name": "WP11A - Off Kerala", "lat": 9.0, "lon": 75.0},
+    {"name": "WP12 - Bay of Bengal", "lat": 10.0, "lon": 82.0},
+    {"name": "WP13 - Monsoon Zone", "lat": 8.0, "lon": 88.0},
+    {"name": "WP14 - Andaman Sea", "lat": 7.0, "lon": 94.0},
+    {"name": "WP15 - Malacca Approach", "lat": 4.0, "lon": 99.0},
+    {"name": "WP16 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+]
+
+_INDIAN_OCEAN_AVOIDANCE = [
+    {"name": "WP9 - Bab el-Mandeb", "lat": 12.5, "lon": 43.5},
+    {"name": "WP10 - Arabian Sea", "lat": 15.0, "lon": 62.0},
+    {"name": "WP11 - Off SW India", "lat": 10.0, "lon": 67.0},
+    {"name": "WP11A - South of India", "lat": 7.0, "lon": 74.0},
+    {"name": "WP12 - South of Sri Lanka", "lat": 5.0, "lon": 79.0},
+    {"name": "WP13 - Equatorial Indian Ocean", "lat": 2.5, "lon": 86.0},
+    {"name": "WP14 - South of Sumatra", "lat": 0.0, "lon": 92.5},
+    {"name": "WP15 - Malacca South", "lat": 1.5, "lon": 99.0},
+    {"name": "WP16 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+]
+
 ROTTERDAM_SINGAPORE = {
     "id": "rotterdam-singapore",
     "name": "Rotterdam → Singapore",
@@ -27,18 +52,11 @@ ROTTERDAM_SINGAPORE = {
     "waypoints": [
         *_ATLANTIC_TO_GIBRALTAR,
         *_MEDITERRANEAN_SUEZ_RED_SEA,
-        {"name": "WP9 - Bab el-Mandeb", "lat": 12.5, "lon": 43.5},
-        {"name": "WP10 - Arabian Sea", "lat": 15.0, "lon": 62.0},
-        {"name": "WP11 - Off India West", "lat": 12.0, "lon": 72.0},
-        {"name": "WP12 - Bay of Bengal", "lat": 10.0, "lon": 82.0},
-        {"name": "WP13 - Monsoon Zone", "lat": 8.0, "lon": 88.0},
-        {"name": "WP14 - Andaman Sea", "lat": 7.0, "lon": 94.0},
-        {"name": "WP15 - Malacca Approach", "lat": 4.0, "lon": 99.0},
-        {"name": "WP16 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+        *_INDIAN_OCEAN_MAIN,
     ],
 }
 
-# Alternative route: detour south of monsoon zone
+# Alternative route: wide southern arc (India → Sri Lanka → Sumatra offshore)
 ROTTERDAM_SINGAPORE_ALT = {
     "id": "rotterdam-singapore-alt",
     "name": "Rotterdam → Singapore (Weather Avoidance)",
@@ -47,14 +65,7 @@ ROTTERDAM_SINGAPORE_ALT = {
     "waypoints": [
         *_ATLANTIC_TO_GIBRALTAR,
         *_MEDITERRANEAN_SUEZ_RED_SEA,
-        {"name": "WP9 - Bab el-Mandeb", "lat": 12.5, "lon": 43.5},
-        {"name": "WP10 - Arabian Sea", "lat": 15.0, "lon": 62.0},
-        {"name": "WP11 - Off India West", "lat": 8.0, "lon": 72.0},
-        {"name": "WP12 - South of Sri Lanka", "lat": 4.0, "lon": 78.0},
-        {"name": "WP13 - Equatorial Detour", "lat": 4.0, "lon": 85.0},
-        {"name": "WP14 - South Indian Ocean", "lat": 4.0, "lon": 92.0},
-        {"name": "WP15 - Malacca South", "lat": 2.5, "lon": 98.0},
-        {"name": "WP16 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+        *_INDIAN_OCEAN_AVOIDANCE,
     ],
 }
 

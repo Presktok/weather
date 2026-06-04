@@ -13,7 +13,7 @@ Build in this order. Do not skip ahead to later weeks until the current week wor
 **Risk rules (backend):**
 ```
 if wave > 4 or wind > 25 kn:  HIGH
-elif wave > 2 or wind > 18 kn: MEDIUM
+elif wave > 2 or wind > 15 kn: MEDIUM
 else:                         LOW
 ```
 

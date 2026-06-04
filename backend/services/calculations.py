@@ -22,10 +22,10 @@ def haversine_nm(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
 
 
 def assess_weather_risk(wave_height: float, wind_speed: float = 0.0) -> RiskLevel:
-    """Week 1 risk engine — wave height and wind speed (kn)."""
+    """Week 1 risk engine — wave height (m) and wind speed (kn)."""
     if wave_height > 4 or wind_speed > 25:
         return "HIGH"
-    if wave_height > 2 or wind_speed > 18:
+    if wave_height > 2 or wind_speed > 15:
         return "MEDIUM"
     return "LOW"
 
