@@ -1,6 +1,6 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from 'react-leaflet'
+import 'leaflet/dist/leaflet.css'
 
 function FitBounds({ paths }) {
   const map = useMap()
@@ -9,6 +9,20 @@ function FitBounds({ paths }) {
     const allPoints = paths.flatMap((p) => p.map((pt) => [pt.lat, pt.lon]))
     if (allPoints.length) map.fitBounds(allPoints, { padding: [40, 40] })
   }, [map, paths])
+  return null
+}
+
+function MapResize() {
+  const map = useMap()
+  useEffect(() => {
+    const t = setTimeout(() => map.invalidateSize(), 0)
+    const onResize = () => map.invalidateSize()
+    window.addEventListener('resize', onResize)
+    return () => {
+      clearTimeout(t)
+      window.removeEventListener('resize', onResize)
+    }
+  }, [map])
   return null
 }
 
@@ -58,9 +72,13 @@ function RiskColoredRoute({ path, legs, muted, routeColor }) {
               <p className="font-bold">{leg.to}</p>
               <p>Wind: {leg.weather.wind} kn</p>
               <p>Wave: {leg.weather.wave} m</p>
-              <p>Risk: <strong style={{ color: leg.risk_color }}>{leg.risk}</strong></p>
+              <p>
+                Risk: <strong style={{ color: leg.risk_color }}>{leg.risk}</strong>
+              </p>
               <hr className="my-1" />
-              <p>STW: {leg.stw_kn} kn → SOG: {leg.sog_kn} kn</p>
+              <p>
+                STW: {leg.stw_kn} kn → SOG: {leg.sog_kn} kn
+              </p>
               <p>Loss: {leg.speed_loss_kn} kn</p>
             </div>
           </Popup>
@@ -70,39 +88,10 @@ function RiskColoredRoute({ path, legs, muted, routeColor }) {
   )
 }
 
-function useAnchorRect(anchorRef) {
-  const [rect, setRect] = useState(null)
-
-  useLayoutEffect(() => {
-    const anchor = anchorRef?.current
-    if (!anchor) return
-
-    const update = () => {
-      const { top, left, width, height } = anchor.getBoundingClientRect()
-      setRect({ top, left, width, height })
-    }
-
-    update()
-    const observer = new ResizeObserver(update)
-    observer.observe(anchor)
-    window.addEventListener('resize', update)
-    window.addEventListener('scroll', update, true)
-
-    return () => {
-      observer.disconnect()
-      window.removeEventListener('resize', update)
-      window.removeEventListener('scroll', update, true)
-    }
-  }, [anchorRef])
-
-  return rect
-}
-
 export default function VoyageMap({
   routeA,
   routeB,
   activeRoute,
-  anchorRef,
   showRouteA = true,
   showRouteB = true,
 }) {
@@ -113,15 +102,19 @@ export default function VoyageMap({
     return result
   }, [routeA, routeB, showRouteA, showRouteB])
 
-  const anchorRect = useAnchorRect(anchorRef)
-  const mapRoot = typeof document !== 'undefined' ? document.getElementById('map-root') : null
-
-  const map = (
-    <MapContainer center={[20, 50]} zoom={3} className="h-full w-full" scrollWheelZoom>
+  return (
+    <MapContainer
+      center={[20, 50]}
+      zoom={3}
+      className="h-full w-full z-0"
+      scrollWheelZoom
+      style={{ minHeight: '100%' }}
+    >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <MapResize />
       <FitBounds paths={paths} />
       {showRouteA && routeA && (
         <RiskColoredRoute
@@ -141,25 +134,4 @@ export default function VoyageMap({
       )}
     </MapContainer>
   )
-
-  if (mapRoot && anchorRect) {
-    return createPortal(
-      <div
-        className="pointer-events-auto overflow-hidden"
-        style={{
-          position: 'fixed',
-          top: anchorRect.top,
-          left: anchorRect.left,
-          width: anchorRect.width,
-          height: anchorRect.height,
-          zIndex: 15,
-        }}
-      >
-        {map}
-      </div>,
-      mapRoot,
-    )
-  }
-
-  return map
 }

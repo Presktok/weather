@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import VoyageMap from './components/VoyageMap'
 import Dashboard from './components/Dashboard'
 
@@ -11,7 +11,6 @@ export default function App() {
   const [activeRoute, setActiveRoute] = useState('b')
   const [showRouteA, setShowRouteA] = useState(true)
   const [showRouteB, setShowRouteB] = useState(true)
-  const mapAnchorRef = useRef(null)
   const [params, setParams] = useState({
     commanded_speed: 12,
     laycan_start: '2026-09-19',
@@ -54,14 +53,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-ocean-900">
-      <VoyageMap
-        routeA={data?.route_a}
-        routeB={data?.route_b}
-        activeRoute={activeRoute}
-        anchorRef={mapAnchorRef}
-        showRouteA={showRouteA}
-        showRouteB={showRouteB}
-      />
       <header className="border-b border-slate-800 bg-ocean-800/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-[1600px] mx-auto px-4 py-3 flex items-center justify-between">
           <div>
@@ -175,7 +166,15 @@ export default function App() {
                 </label>
               </div>
             </div>
-            <div ref={mapAnchorRef} className="h-[calc(100%-36px)]" />
+            <div className="h-[calc(100%-36px)] relative z-0">
+              <VoyageMap
+                routeA={data?.route_a}
+                routeB={data?.route_b}
+                activeRoute={activeRoute}
+                showRouteA={showRouteA}
+                showRouteB={showRouteB}
+              />
+            </div>
           </div>
 
           <div className="lg:max-h-[700px] lg:overflow-y-auto">
