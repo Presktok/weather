@@ -1,4 +1,6 @@
-from fastapi import FastAPI
+import os
+
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
@@ -18,6 +20,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+router = APIRouter()
 
 
 class VoyageRequest(BaseModel):
@@ -42,16 +46,15 @@ def root():
     return {"status": "ok", "service": "Voyage Optimization API"}
 
 
-@app.get("/api/route/{route_id}")
+@router.get("/route/{route_id}")
 def route_geometry(route_id: str):
     """Week 1: map route + waypoints only (no weather)."""
     if route_id not in ROUTES:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Route not found")
     return get_route_geometry(route_id)
 
 
-@app.get("/api/routes")
+@router.get("/routes")
 def list_routes():
     return {
         rid: {
@@ -65,7 +68,7 @@ def list_routes():
     }
 
 
-@app.post("/api/voyage/analyze")
+@router.post("/voyage/analyze")
 async def voyage_analyze(req: VoyageRequest):
     return await analyze_voyage(
         route_id=req.route_id,
@@ -77,7 +80,7 @@ async def voyage_analyze(req: VoyageRequest):
     )
 
 
-@app.post("/api/voyage/compare")
+@router.post("/voyage/compare")
 async def voyage_compare(req: CompareRequest):
     return await compare_routes(
         laycan_start=req.laycan_start,
@@ -88,7 +91,14 @@ async def voyage_compare(req: CompareRequest):
     )
 
 
-@app.get("/api/demo/rotterdam-singapore")
+@router.get("/demo/rotterdam-singapore")
 async def demo_voyage():
     """Quick demo endpoint for hackathon flow."""
     return await compare_routes()
+
+
+# Vercel Services mounts this app at /api (routes omit the prefix). Local dev uses /api prefix.
+if os.getenv("VERCEL"):
+    app.include_router(router)
+else:
+    app.include_router(router, prefix="/api")

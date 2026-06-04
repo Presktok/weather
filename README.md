@@ -71,13 +71,14 @@ Full stack: React frontend + FastAPI API on one Vercel project.
 
 1. Go to [vercel.com/new](https://vercel.com/new) and sign in with GitHub.
 2. Import **Presktok/weather**.
-3. Leave defaults (Vercel reads [`vercel.json`](vercel.json) at the repo root):
-   - **Root Directory:** `.` (repository root)
-   - **Build Command:** `npm run build --prefix frontend`
-   - **Output Directory:** `frontend/dist`
-4. Click **Deploy**.
+3. **Application Preset:** **Services** (Vercel detects frontend + backend).
+4. **Root Directory:** `./` (repo root) — click **Refresh** if `vercel.json` was just updated.
+5. Confirm [`vercel.json`](vercel.json) shows:
+   - `frontend` → `/`
+   - `backend` → `/api` (not `/_/backend`)
+6. Click **Deploy**.
 
-Your live URL will be like `https://weather-xxxx.vercel.app`. The app calls `/api` on the same domain (no extra API host).
+Your live URL will be like `https://weather-xxxx.vercel.app`. The app calls `/api` on the same domain.
 
 ### Optional: Vercel CLI
 
