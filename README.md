@@ -1,116 +1,203 @@
-# Voyage Optimizer — MVP Build Guide
+# Voyage Optimizer
 
-Build in this order. Do not skip ahead to later weeks until the current week works.
+Weather-aware voyage planning for long-distance shipping. Compare two route options (shortest vs weather-avoidance), assess risk along each leg, estimate fuel and delay, and check laycan compliance.
 
-## Week 1 — Core Demo (Map + Weather + Risk)
-
-| Step | Goal | Status |
-|------|------|--------|
-| 1. Map | Rotterdam → Singapore route, waypoints, polyline | `GET /api/route/rotterdam-singapore` |
-| 2. Weather | Wind + wave at each waypoint (Open-Meteo) | `POST /api/voyage/analyze` |
-| 3. Risk | LOW / MEDIUM / HIGH colored segments on map | wave/wind thresholds below |
-
-**Risk rules (backend):**
-```
-if wave > 4 or wind > 25 kn:  HIGH
-elif wave > 2 or wind > 15 kn: MEDIUM
-else:                         LOW
-```
-
-**Inputs:** commanded speed **6–18 kn** · laycan start ≥ departure · monsoon corridor severity scales with **departure month** (Jun–Sep peak).
-
-**Map colors:** Green = Low · Yellow = Medium · Red = High
+**Live demo:** Deploy via [Vercel](#deploy-on-vercel) (frontend + API).  
+**Example route:** Rotterdam → Singapore (Route A main path, Route B monsoon detour).
 
 ---
 
-## Week 2 — Business Logic
+## Features
 
-| Step | Goal | Formula |
-|------|------|---------|
-| 4. Speed loss | Weather affects SOG | `speed_loss = wave * 0.20 + wind * 0.01`, `SOG = 12 - speed_loss` |
-| 5. ETA | Per leg + total | `hours = distance_nm / SOG` |
-| 6. Laycan | SAFE or HIGH RISK | Compare predicted ETA to laycan window |
+- **Interactive map** — Route A and Route B with risk-colored segments (LOW / MEDIUM / HIGH), toggle visibility, and focus per route
+- **Live weather** — Wind and wave at each waypoint ([Open-Meteo](https://open-meteo.com/)); seasonal monsoon model in the Indian Ocean corridor based on departure date
+- **Voyage metrics** — Distance, ETA, fuel consumption, weather delay, and laycan status (SAFE / EARLY / HIGH RISK)
+- **Route comparison** — Side-by-side metrics and a weighted recommendation (cost, delay, risk, laycan)
+- **Operational advice** — Context-specific laycan messaging (buffer when early, required speed only when at risk)
 
 ---
 
-## Week 3 — What Judges Care About
+## Tech stack
 
-| Step | Goal | Formula |
-|------|------|---------|
-| 7. Fuel | Bunker cost | `fuel = 32 * (speed/12)³` per day, summed per leg |
-| 8. Compare | Route A vs Route B table | `POST /api/voyage/compare` |
-| 9. Recommend | Weighted score (lower wins) | `0.4×cost + 0.3×delay + 0.2×risk + 0.1×laycan` |
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18, Vite, Tailwind CSS, Leaflet |
+| Backend | Python 3, FastAPI, httpx |
+| Deploy | Vercel (Services preset) or local dev with Uvicorn |
+
+---
+
+## Project structure
+
+```
+weather/
+├── backend/           # FastAPI app, voyage logic, weather, calculations
+│   ├── data/routes.py # Waypoints for Route A & B
+│   └── services/
+├── frontend/          # React UI
+├── api/               # Vercel serverless entry (re-exports FastAPI app)
+├── docs/              # Static build for GitHub Pages (optional)
+└── vercel.json        # Vercel deployment config
+```
 
 ---
 
 ## Run locally
 
-**Backend:**
+### Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+
+### Backend
+
 ```bash
 cd backend
 python -m venv venv
+```
+
+**Windows:**
+```bash
 venv\Scripts\activate
+```
+
+**macOS / Linux:**
+```bash
+source venv/bin/activate
+```
+
+```bash
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
 ```
 
-**Frontend:**
+API base: `http://localhost:8000/api`
+
+### Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173
+Open **http://localhost:5173** — the dev server proxies `/api` to port 8000.
+
+### Optional: demo weather only
+
+```bash
+set USE_DEMO_WEATHER=true   # Windows
+export USE_DEMO_WEATHER=true  # macOS / Linux
+```
 
 ---
 
-## Deploy on Vercel (recommended)
+## Deploy on Vercel
 
-Full stack: React frontend + FastAPI API on one Vercel project.
-
-### Deploy from GitHub
-
-1. Go to [vercel.com/new](https://vercel.com/new) and sign in with GitHub.
-2. Import **Presktok/weather**.
-3. **Application Preset:** **Services** (Vercel detects frontend + backend).
-4. **Root Directory:** `./` (repo root) — click **Refresh** if `vercel.json` was just updated.
-5. Confirm [`vercel.json`](vercel.json) shows:
+1. Import this repository at [vercel.com/new](https://vercel.com/new).
+2. **Application Preset:** Services (frontend + FastAPI).
+3. **Root directory:** repository root (`.`).
+4. Confirm `vercel.json`:
    - `frontend` → `/`
-   - `backend` → `/api` (not `/_/backend`)
-6. Click **Deploy**.
+   - `backend` → `/api`
+5. Deploy.
 
-Your live URL will be like `https://weather-xxxx.vercel.app`. The app calls `/api` on the same domain.
+The app uses `/api` on the same domain for voyage analysis.
 
-### Optional: Vercel CLI
-
+**CLI:**
 ```bash
 npm i -g vercel
-cd weather
 vercel
 vercel --prod
 ```
 
-### GitHub Pages (alternative)
+### GitHub Pages (frontend only)
 
-Static-only hosting: **Settings → Pages → branch `main` → folder `/docs`** → https://presktok.github.io/weather/ (API must be hosted separately, e.g. Render).
+Settings → Pages → branch `main` → folder `/docs` → `https://<user>.github.io/weather/`
 
----
-
-## API (by week)
-
-| Week | Endpoint | Purpose |
-|------|----------|---------|
-| 1 | `GET /api/route/{id}` | Route geometry only |
-| 1–2 | `POST /api/voyage/analyze` | Single route + weather + ETA + laycan |
-| 3 | `POST /api/voyage/compare` | Route A vs B + recommendation |
+Requires a separate API host (e.g. [Render](https://render.com/deploy?repo=https://github.com/Presktok/weather) via `render.yaml`).
 
 ---
 
-## Hackathon demo script
+## API
 
-1. Map loads with **risk-colored route segments**
-2. Click waypoint → see **wind, wave, SOG**
-3. Dashboard shows **ETA**, **fuel cost**, **laycan SAFE / HIGH RISK**
-4. Comparison table: **Route A vs Route B**
-5. **Recommended Route** card with reasons (Lower cost, Lower risk, Laycan safe)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/route/{route_id}` | Route geometry and waypoints |
+| `GET` | `/api/routes` | List available routes |
+| `POST` | `/api/voyage/analyze` | Analyze a single route |
+| `POST` | `/api/voyage/compare` | Compare Route A vs Route B + recommendation |
+| `GET` | `/api/demo/rotterdam-singapore` | Quick compare with default parameters |
+
+### Compare request body
+
+```json
+{
+  "commanded_speed": 12,
+  "departure_time": "2026-08-22",
+  "laycan_start": "2026-09-19",
+  "laycan_end": "2026-09-20",
+  "bunker_price": 600
+}
+```
+
+| Field | Constraints |
+|-------|-------------|
+| `commanded_speed` | 6–18 kn |
+| `departure_time` | ISO date `YYYY-MM-DD` |
+| `laycan_start` | Must be ≥ `departure_time` |
+| `laycan_end` | Must be ≥ `laycan_start` |
+
+---
+
+## Models and formulas
+
+### Weather risk (per leg)
+
+```
+HIGH    if wave > 4 m OR wind > 25 kn
+MEDIUM  if wave > 2 m OR wind > 15 kn
+LOW     otherwise
+```
+
+### Speed and delay
+
+```
+speed_loss = wave × 0.20 + wind × 0.01
+SOG = commanded_speed − speed_loss
+leg_hours = distance_nm / SOG
+weather_delay = actual voyage hours − ideal hours at commanded speed
+```
+
+### Fuel
+
+```
+fuel_mt_per_day = 32 × (SOG / 12)³
+leg_fuel = fuel_mt_per_day × (leg_hours / 24)
+```
+
+### Route recommendation score
+
+Weighted comparison (lower raw score = better): **40% cost · 30% delay · 20% risk · 10% laycan**
+
+Display scores (0–100) are **relative between Route A and Route B** for the same voyage inputs, not an absolute grade.
+
+### Monsoon season (Indian Ocean demo corridor)
+
+| Departure month | Effect |
+|-----------------|--------|
+| Jun–Sep | Peak monsoon conditions |
+| May, Oct | Transition |
+| Oct–May | Typically lower |
+
+---
+
+## Map note
+
+Routes use dense sea waypoints and great-circle interpolation for display. Geometry is a **representative corridor for comparison**, not for navigation.
+
+---
+
+## License
+
+This project is provided as-is for demonstration and educational use.
