@@ -134,17 +134,32 @@ export default function App() {
           <div className="rounded-xl border border-slate-700 overflow-hidden h-[500px] lg:h-[700px] relative">
             <div className="relative z-20 bg-ocean-800 px-3 py-2 flex flex-wrap items-center gap-2 border-b border-slate-700">
               <button
+                type="button"
                 onClick={() => setActiveRoute('a')}
-                className={`text-xs px-3 py-1 rounded ${activeRoute === 'a' ? 'bg-blue-600 text-white' : 'bg-ocean-900 text-slate-400'}`}
+                className={`text-xs px-3 py-1.5 rounded-md border transition ${
+                  activeRoute === 'a'
+                    ? 'bg-blue-600 border-blue-400 text-white shadow-sm shadow-blue-900/50'
+                    : 'bg-ocean-900 border-slate-600 text-slate-400 hover:border-blue-500/50'
+                }`}
               >
-                Route A — Shortest
+                <span className="font-bold text-blue-200">A</span> Shortest
               </button>
               <button
+                type="button"
                 onClick={() => setActiveRoute('b')}
-                className={`text-xs px-3 py-1 rounded ${activeRoute === 'b' ? 'bg-green-600 text-white' : 'bg-ocean-900 text-slate-400'}`}
+                className={`text-xs px-3 py-1.5 rounded-md border transition ${
+                  activeRoute === 'b'
+                    ? 'bg-green-600 border-green-400 text-white shadow-sm shadow-green-900/50'
+                    : 'bg-ocean-900 border-slate-600 text-slate-400 hover:border-green-500/50'
+                }`}
               >
-                Route B — Avoidance
+                <span className="font-bold text-green-200">B</span> Avoidance
               </button>
+              {showRouteA && showRouteB && (
+                <span className="text-[10px] text-slate-500 hidden sm:inline">
+                  Solid + risk colors = focused route · dashed = other
+                </span>
+              )}
               <div className="flex items-center gap-3 ml-auto text-xs text-slate-400">
                 <label className="flex items-center gap-1.5 cursor-pointer">
                   <input
