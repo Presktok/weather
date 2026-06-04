@@ -1,14 +1,13 @@
 """Predefined voyage routes and waypoints."""
 
-# Shared segment: Mediterranean → Suez → Red Sea (stays over water on map)
+# Mediterranean → Suez → Red Sea (offshore segments for map display)
 _MEDITERRANEAN_SUEZ_RED_SEA = [
-    {"name": "WP6 - Central Mediterranean", "lat": 35.0, "lon": 15.0},
+    {"name": "WP6 - Mediterranean", "lat": 35.0, "lon": 15.0},
     {"name": "WP6A - Crete Passage", "lat": 35.0, "lon": 24.0},
     {"name": "WP6B - Eastern Mediterranean", "lat": 33.5, "lon": 29.0},
-    {"name": "WP7 - Suez Approach", "lat": 31.5, "lon": 32.0},
-    {"name": "WP7A - Gulf of Suez", "lat": 28.0, "lon": 33.0},
-    {"name": "WP7B - Red Sea Entrance", "lat": 24.0, "lon": 35.0},
-    {"name": "WP8 - Red Sea North", "lat": 22.0, "lon": 38.5},
+    {"name": "WP7 - Port Said", "lat": 31.3, "lon": 32.3},
+    {"name": "WP7A - Gulf of Suez", "lat": 28.5, "lon": 33.0},
+    {"name": "WP8 - Red Sea North", "lat": 24.0, "lon": 35.5},
 ]
 
 _ATLANTIC_TO_GIBRALTAR = [
@@ -19,11 +18,18 @@ _ATLANTIC_TO_GIBRALTAR = [
     {"name": "WP5 - Strait of Gibraltar", "lat": 36.0, "lon": -5.5},
 ]
 
-# Extra sea points per leg — Leaflet draws straight segments between waypoints
+# Malacca → Singapore (stays in strait water, avoids Malaysia landmass on map)
 _MALACCA_TO_SINGAPORE = [
-    {"name": "WP15 - North Malacca", "lat": 3.5, "lon": 100.0},
-    {"name": "WP16 - Malacca Strait", "lat": 2.3, "lon": 101.2},
+    {"name": "WP15 - Malacca Strait", "lat": 5.0, "lon": 99.5},
+    {"name": "WP16 - South Malacca", "lat": 3.0, "lon": 101.0},
     {"name": "WP17 - Singapore Approach", "lat": 2.0, "lon": 102.0},
+]
+
+_MALACCA_TO_SINGAPORE_SOUTH = [
+    {"name": "WP15 - Malacca Approach", "lat": 3.0, "lon": 97.5},
+    {"name": "WP16 - Malacca Strait", "lat": 5.0, "lon": 99.5},
+    {"name": "WP17 - South Malacca", "lat": 3.0, "lon": 101.0},
+    {"name": "WP18 - Singapore Approach", "lat": 2.0, "lon": 102.0},
 ]
 
 _INDIAN_OCEAN_MAIN = [
@@ -45,8 +51,7 @@ _INDIAN_OCEAN_AVOIDANCE = [
     {"name": "WP12 - South of Sri Lanka", "lat": 5.0, "lon": 79.0},
     {"name": "WP13 - Equatorial Indian Ocean", "lat": 2.5, "lon": 86.0},
     {"name": "WP14 - South of Sumatra", "lat": 0.0, "lon": 92.5},
-    {"name": "WP15 - Malacca South", "lat": 1.5, "lon": 99.0},
-    *_MALACCA_TO_SINGAPORE[1:],  # strait + Singapore (skip duplicate north malacca)
+    *_MALACCA_TO_SINGAPORE_SOUTH,
 ]
 
 ROTTERDAM_SINGAPORE = {

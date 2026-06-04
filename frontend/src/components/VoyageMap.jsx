@@ -1,6 +1,9 @@
 import { useEffect, useMemo } from 'react'
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from 'react-leaflet'
+import { densifyPathLatLng } from '../utils/routeGeometry'
 import 'leaflet/dist/leaflet.css'
+
+const MAP_STEPS_PER_LEG = 8
 
 const ROUTE_STYLES = {
   a: {
@@ -43,14 +46,10 @@ function MapResize() {
   return null
 }
 
-function pathToLatLng(path) {
-  return path.map((pt) => [pt.lat, pt.lon])
-}
-
 /** Full-route silhouette so A vs B shape is obvious when overlaid */
 function RouteOutline({ path, style, isActive, showRisk }) {
   if (!path?.length) return null
-  const positions = pathToLatLng(path)
+  const positions = densifyPathLatLng(path, MAP_STEPS_PER_LEG)
   const { color, mutedColor } = style
 
   return (
@@ -90,13 +89,11 @@ function RiskColoredRoute({ path, legs, style, isActive, routeKey }) {
         const end = path[i + 1]
         if (!start || !end) return null
         const color = leg.risk_color || style.color
+        const positions = densifyPathLatLng([start, end], MAP_STEPS_PER_LEG)
         return (
           <Polyline
             key={`${routeKey}-seg-${leg.to}-${i}`}
-            positions={[
-              [start.lat, start.lon],
-              [end.lat, end.lon],
-            ]}
+            positions={positions}
             pathOptions={{
               color,
               weight: 7,

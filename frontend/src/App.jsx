@@ -207,7 +207,7 @@ export default function App() {
                 </label>
               </div>
             </div>
-            <div className="h-[calc(100%-36px)] relative z-0">
+            <div className="h-[calc(100%-52px)] relative z-0">
               <VoyageMap
                 routeA={data?.route_a}
                 routeB={data?.route_b}
@@ -216,6 +216,10 @@ export default function App() {
                 showRouteB={showRouteB}
               />
             </div>
+            <p className="relative z-20 px-3 py-1.5 text-[10px] text-slate-500 border-t border-slate-700/80 bg-ocean-900/90 leading-snug">
+              <span className="text-slate-400 font-medium">Route geometry:</span>{' '}
+              Representative sea corridor for voyage comparison. Not intended for navigational use.
+            </p>
           </div>
 
           <div className="lg:max-h-[700px] lg:overflow-y-auto">
