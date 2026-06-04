@@ -312,23 +312,33 @@ export default function Dashboard({ data, loading }) {
           titleClassName: 'font-semibold text-amber-200',
           children: (
             <>
+              {operationalAdvice.laycan_advice_label && (
+                <div className="mb-3 pb-3 border-b border-amber-500/20 flex items-center justify-between gap-2">
+                  <MetricRow
+                    label={operationalAdvice.laycan_advice_label}
+                    value={operationalAdvice.laycan_advice_value}
+                    highlight={operationalAdvice.laycan_status === 'HIGH RISK'}
+                  />
+                  {operationalAdvice.laycan_status && (
+                    <RiskBadge risk={operationalAdvice.laycan_status} />
+                  )}
+                </div>
+              )}
               <MetricRow label="Current average SOG" value={`${operationalAdvice.current_average_sog_kn} kn`} />
               <MetricRow label="Commanded speed" value={`${operationalAdvice.commanded_speed_kn} kn`} />
-              {operationalAdvice.required_speed_kn != null && (
-                <MetricRow
-                  label="Speed required for laycan"
-                  value={`~${operationalAdvice.required_speed_kn} kn`}
-                  highlight
-                />
+              {operationalAdvice.predicted_eta && (
+                <MetricRow label="Predicted ETA" value={operationalAdvice.predicted_eta} />
               )}
-              {operationalAdvice.required_departure_before && (
+              {operationalAdvice.laycan_status === 'HIGH RISK' && operationalAdvice.required_departure_before && (
                 <MetricRow
                   label="Depart before"
                   value={operationalAdvice.required_departure_before}
                   highlight
                 />
               )}
-              {operationalAdvice.note && <p className="text-xs text-slate-500 mt-2">{operationalAdvice.note}</p>}
+              {operationalAdvice.laycan_status === 'HIGH RISK' && operationalAdvice.remediation_note && (
+                <p className="text-xs text-amber-300/90 mt-2">{operationalAdvice.remediation_note}</p>
+              )}
             </>
           ),
         })}

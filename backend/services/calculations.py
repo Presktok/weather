@@ -106,17 +106,45 @@ def summarize_weather_sources(*analyses: dict) -> dict:
     }
 
 
+def build_laycan_ui_advice(laycan: dict, remediation: dict) -> dict:
+    """Status-specific laycan line for the operational advice panel."""
+    status = laycan["risk"]
+    if status == "SAFE":
+        return {
+            "laycan_status": status,
+            "laycan_advice_label": "Laycan compliance",
+            "laycan_advice_value": "Within window",
+        }
+    if status == "EARLY":
+        days = laycan.get("days_early")
+        if days is None:
+            days = round(laycan.get("expected_miss_hours", 0) / 24, 1)
+        return {
+            "laycan_status": status,
+            "laycan_advice_label": "Laycan buffer",
+            "laycan_advice_value": f"{days} days",
+        }
+    return {
+        "laycan_status": status,
+        "laycan_advice_label": "Required speed for laycan",
+        "laycan_advice_value": f"{remediation['estimated_speed_required_kn']} kn",
+        "required_speed_kn": remediation["estimated_speed_required_kn"],
+        "required_departure_before": remediation["required_departure_before"],
+        "remediation_note": remediation.get("note"),
+    }
+
+
 def build_operational_advice(recommended: dict, charter_warning: dict | None = None) -> dict:
     s = recommended["summary"]
+    lc = recommended["laycan"]
     remediation = build_laycan_remediation(recommended)
     advice = {
         "current_average_sog_kn": s["average_sog_kn"],
         "commanded_speed_kn": s["commanded_speed_kn"],
-        "required_speed_kn": remediation["estimated_speed_required_kn"],
-        "required_departure_before": remediation["required_departure_before"],
+        "predicted_eta": lc.get("predicted_eta_display"),
+        **build_laycan_ui_advice(lc, remediation),
+        "remediation": remediation,
     }
-    if remediation.get("note"):
-        advice["note"] = remediation["note"]
     if charter_warning:
         advice["laycan_critical"] = True
     return advice
@@ -154,6 +182,7 @@ def assess_laycan_risk(
     eta = dep + timedelta(hours=predicted_eta_hours)
     voyage_days = round(predicted_eta_hours / 24, 1)
 
+    days_early = None
     if start <= eta <= end:
         status: LaycanStatus = "SAFE"
         offset_hours = 0.0
@@ -162,6 +191,7 @@ def assess_laycan_risk(
         status = "EARLY"
         offset_hours = round((start - eta).total_seconds() / 3600, 1)
         days_early = round(offset_hours / 24, 1)
+        miss_days = 0
         detail = (
             f"ETA {eta.strftime('%d %b %Y')} is {days_early} days before laycan opens "
             f"({laycan_start}) — vessel may wait at anchorage"
@@ -174,7 +204,10 @@ def assess_laycan_risk(
             f"by {round(offset_hours / 24, 1)} days"
         )
 
-    miss_days = round(offset_hours / 24, 0) if status == "HIGH RISK" else 0
+    if status == "HIGH RISK":
+        miss_days = round(offset_hours / 24, 0)
+    elif status != "EARLY":
+        miss_days = 0
 
     return {
         "laycan_start": laycan_start,
@@ -186,6 +219,7 @@ def assess_laycan_risk(
         "risk": status,
         "expected_miss_hours": offset_hours,
         "miss_days": miss_days,
+        "days_early": days_early if status == "EARLY" else None,
         "detail": detail,
     }
 
